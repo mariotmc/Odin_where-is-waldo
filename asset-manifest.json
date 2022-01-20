@@ -1,0 +1,18 @@
+{
+  "files": {
+    "main.css": "/Odin_where-is-waldo/static/css/main.9a03ecc5.css",
+    "main.js": "/Odin_where-is-waldo/static/js/main.bdd17e60.js",
+    "static/media/main.jpg": "/Odin_where-is-waldo/static/media/main.314cec99f414807b7e27.jpg",
+    "static/media/Yubaba.png": "/Odin_where-is-waldo/static/media/Yubaba.124d78907c3fe76760bc.png",
+    "static/media/Bowser.png": "/Odin_where-is-waldo/static/media/Bowser.79c5eb2bbc827836b9d7.png",
+    "static/media/TheKnight.webp": "/Odin_where-is-waldo/static/media/TheKnight.b0014b3db7961de88c65.webp",
+    "static/media/cursor.svg": "/Odin_where-is-waldo/static/media/cursor.a1125529a9825ee93790.svg",
+    "index.html": "/Odin_where-is-waldo/index.html",
+    "main.9a03ecc5.css.map": "/Odin_where-is-waldo/static/css/main.9a03ecc5.css.map",
+    "main.bdd17e60.js.map": "/Odin_where-is-waldo/static/js/main.bdd17e60.js.map"
+  },
+  "entrypoints": [
+    "static/css/main.9a03ecc5.css",
+    "static/js/main.bdd17e60.js"
+  ]
+}
