@@ -1,0 +1,19 @@
+@use "functions" as *;
+@use "variables" as *;
+
+header {
+  display: flex;
+  justify-content: center;
+  position: fixed;
+  top: 0;
+  width: 100%;
+  padding: rem(20) rem(75);
+  color: var(--dark-red);
+  background-color: var(--dark-blue);
+  font-family: var(--font-secondary);
+  border-bottom: rem(2) solid var(--white);
+
+  h1 {
+    margin: 0;
+  }
+}
