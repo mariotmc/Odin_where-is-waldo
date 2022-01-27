@@ -3,8 +3,9 @@ import Bowser from "../media/Bowser.png";
 import Yubaba from "../media/Yubaba.png";
 import TheKnight from "../media/TheKnight.webp";
 
-const GameStartModal = (props) => {
-  const [setGameOver] = props;
+const GameStartModal = (setIsTimerActiveState, setGameOverState) => {
+  const [setIsTimerActive] = setIsTimerActiveState;
+  const [setGameOver] = setGameOverState;
 
   return (
     <div className="modal">
@@ -33,7 +34,13 @@ const GameStartModal = (props) => {
               <h5 className="character-universe">Hollow Knight</h5>
             </div>
           </div>
-          <button className="button" onClick={() => setGameOver(null)}>
+          <button
+            className="button"
+            onClick={() => {
+              setGameOver(null);
+              setIsTimerActive(true);
+            }}
+          >
             START
           </button>
         </div>
