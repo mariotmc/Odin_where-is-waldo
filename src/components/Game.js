@@ -1,4 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { fetchCharacters, addTime, getTopScores } from "../firebase";
+import Header from ".//Header";
 import GameStartModal from "./GameStartModal";
 import GameOverModal from "./GameOverModal";
 import CorrectGuessMessage from "./CorrectGuessMessage";
@@ -6,19 +8,29 @@ import WrongGuessMessage from "./WrongGuessMessage";
 import gameImage from "../media/main.jpg";
 
 const Game = () => {
-  const charactersObj = {
-    Bowser: { x: { min: 78, max: 87 }, y: { min: 166, max: 175 }, found: false },
-    Yubaba: { x: { min: 49, max: 52 }, y: { min: 21, max: 26 }, found: false },
-    TheKnight: { x: { min: 58, max: 59 }, y: { min: 376, max: 385 }, found: false },
-  };
-
-  const [characters] = useState(charactersObj);
+  const [characters, setCharacters] = useState(fetchCharacters());
   const [guess, setGuess] = useState(null);
   const [foundCharacter, setFoundCharacter] = useState(null);
+  const [remainingCharacters, setRemainingCharacters] = useState(3);
   const [showCharacterSelection, setShowCharacterSelection] = useState(false);
   const [coordinates, setCoordinates] = useState({ x: 0, y: 0 });
   const [currentEvent, setCurrentEvent] = useState(null);
   const [gameOver, setGameOver] = useState(false);
+  const [isTimerActive, setIsTimerActive] = useState(false);
+  const [seconds, setSeconds] = useState(0);
+  const [minutes, setMinutes] = useState(0);
+  const [hours, setHours] = useState(0);
+  const [topScores, setTopScores] = useState(getTopScores());
+
+  const getCharacterIndex = (characterName) => {
+    let index;
+
+    characters.map((element) =>
+      element.id === characterName ? (index = characters.indexOf(element)) : null
+    );
+
+    return index;
+  };
 
   const CharacterPopup = () => {
     const guessMarkStyles = {
@@ -34,10 +46,18 @@ const Game = () => {
 
     return (
       <div id="guess-mark" style={guessMarkStyles}>
-        <ul id="character-menu">
-          <li onClick={() => selectCharacter("Bowser")}>Bowser</li>
-          <li onClick={() => selectCharacter("Yubaba")}>Yubaba</li>
-          <li onClick={() => selectCharacter("TheKnight")}>The Knight</li>
+        <ul id="character-menu" style={{ textAlign: "center" }}>
+          {characters.map((element) => {
+            if (element.found === false) {
+              return (
+                <li key={Math.floor(Math.random() * 100000)} onClick={() => selectCharacter(element.id)}>
+                  {element.id}
+                </li>
+              );
+            } else {
+              return null;
+            }
+          })}
         </ul>
       </div>
     );
@@ -52,9 +72,10 @@ const Game = () => {
     }
 
     function isInRadius(character, axis) {
+      const index = getCharacterIndex(character);
       const cursorLocation = getMousePosition()[axis];
-      const characterMin = characters[character][axis].min;
-      const characterMax = characters[character][axis].max;
+      const characterMin = characters[index][axis].min;
+      const characterMax = characters[index][axis].max;
       return (cursorLocation >= characterMin && cursorLocation <= characterMax) ||
         (cursorLocation >= characterMin && cursorLocation <= characterMax)
         ? true
@@ -62,12 +83,12 @@ const Game = () => {
     }
 
     function validateCharacterFound(character) {
-      const arr = Object.entries(characters);
-      arr.map((element) => {
-        if (element[0] === character) {
+      characters.map((element) => {
+        if (element.id === character) {
           return (
             setFoundCharacter(character),
-            (element[1].found = true) && setTimeout(() => setGuess(null), 3000) && setGuess(true)
+            setRemainingCharacters((remainingCharacters) => remainingCharacters - 1),
+            (element.found = true) && setTimeout(() => setGuess(null), 3000) && setGuess(true)
           );
         } else {
           return;
@@ -81,12 +102,62 @@ const Game = () => {
   };
 
   const isGameOver = () => {
-    const arr = Object.entries(characters).map((element) => (element[1].found === true ? true : false));
-    if (arr.every((element) => element === true)) setGameOver(true);
+    if (characters.every((element) => element.found === true)) {
+      setIsTimerActive(false);
+      addTime(seconds, minutes, hours);
+      setTopScores(getTopScores());
+      setGameOver(true);
+    }
   };
+
+  const Timer = () => {
+    if (seconds < 10 && minutes < 10 && hours < 10) {
+      return `0${hours}:0${minutes}:0${seconds}`;
+    } else if (seconds >= 10 && minutes >= 10 && hours >= 10) {
+      return `${hours}:${minutes}:${seconds}`;
+    } else if (seconds >= 10 && minutes < 10 && hours < 10) {
+      return `0${hours}:0${minutes}:${seconds}`;
+    } else if (seconds < 10 && minutes >= 10 && hours < 10) {
+      return `0${hours}:${minutes}:0${seconds}`;
+    } else if (seconds < 10 && minutes < 10 && hours >= 10) {
+      return `${hours}:0${minutes}:0${seconds}`;
+    } else if (seconds >= 10 && minutes >= 10 && hours < 10) {
+      return `0${hours}:${minutes}:${seconds}`;
+    } else if (seconds >= 10 && minutes < 10 && hours >= 10) {
+      return `${hours}:0${minutes}:${seconds}`;
+    } else if (seconds < 10 && minutes >= 10 && hours >= 10) {
+      return `${hours}:${minutes}:0${seconds}`;
+    }
+  };
+
+  useEffect(() => {
+    let interval = null;
+
+    if (isTimerActive) {
+      interval = setInterval(() => {
+        if (seconds < 59) {
+          setSeconds((seconds) => seconds + 1);
+        } else {
+          setSeconds(0);
+          if (minutes < 59) {
+            setMinutes((minutes) => minutes + 1);
+          }
+          if (minutes === 59) {
+            setMinutes(0);
+            setHours((hours) => hours + 1);
+          }
+        }
+      }, 1000);
+    } else if (!isTimerActive && seconds !== 0 && minutes !== 0 && hours !== 0) {
+      clearInterval(interval);
+    }
+
+    return () => clearInterval(interval);
+  }, [isTimerActive, seconds, minutes, hours]);
 
   return (
     <>
+      {Header(Timer(), [remainingCharacters], [characters])}
       <img
         id="game-image"
         src={gameImage}
@@ -97,11 +168,22 @@ const Game = () => {
           showCharacterSelection ? setShowCharacterSelection(false) : setShowCharacterSelection(true);
         }}
       />
-      {gameOver === false && GameStartModal([setGameOver])}
-      {gameOver === true && GameOverModal([setGameOver])}
+      {gameOver === false && GameStartModal([setIsTimerActive], [setGameOver])}
+      {gameOver === true &&
+        GameOverModal(
+          [setGameOver],
+          [setIsTimerActive],
+          Timer(),
+          [setSeconds],
+          [setMinutes],
+          [setHours],
+          [setCharacters],
+          [setRemainingCharacters],
+          [topScores, setTopScores]
+        )}
       {guess === true && CorrectGuessMessage([foundCharacter])}
       {guess === false && WrongGuessMessage()}
-      {showCharacterSelection ? <CharacterPopup /> : null}
+      {showCharacterSelection ? CharacterPopup() : null}
     </>
   );
 };
